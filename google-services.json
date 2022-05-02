@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "110242178486",
+    "project_id": "uloztouk",
+    "storage_bucket": "uloztouk.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:110242178486:android:ca9c37566d05461faf0d17",
+        "android_client_info": {
+          "package_name": "com.play.google.com"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "110242178486-dcl10r4i4tlbm737r6n7ldori6ani2qt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBkm9RtWR5HSaGF0qmVPCQBdpsEq_fTTCY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "110242178486-dcl10r4i4tlbm737r6n7ldori6ani2qt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
