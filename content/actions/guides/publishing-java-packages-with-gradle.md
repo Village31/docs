@@ -5,15 +5,16 @@ product: '{% data reusables.gated-features.actions %}'
 redirect_from:
   - /actions/language-and-framework-guides/publishing-java-packages-with-gradle
 versions:
-  free-pro-team: '*'
-  enterprise-server: '>=2.22'
-  github-ae: '*'
+  fpt: '*'
+  ghes: '*'
+  ghae: '*'
 type: tutorial
 topics:
   - Packaging
   - Publishing
   - Java
   - Gradle
+shortTitle: Java packages with Gradle
 ---
 
 {% data reusables.actions.enterprise-beta %}
@@ -73,13 +74,11 @@ publishing {
 ```
 {% endraw %}
 
-With this configuration, you can create a workflow that publishes your package to the Maven Central Repository by running the `gradle publish` command. You’ll also need to provide environment variables that contain the username and password to authenticate to the repository.
+With this configuration, you can create a workflow that publishes your package to the Maven Central Repository by running the `gradle publish` command. In the deploy step, you’ll need to set environment variables for the username and password or token that you use to authenticate to the Maven repository. For more information, see "[Creating and using encrypted secrets](/github/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets)."
 
-In the deploy step, you’ll need to set environment variables for the username and password or token that you use to authenticate to the Maven repository. For more information, see "[Creating and using encrypted secrets](/github/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets)."
-
-
-{% raw %}
 ```yaml{:copy}
+{% data reusables.actions.actions-not-certified-by-github-comment %}
+
 name: Publish package to the Maven Central Repository
 on:
   release:
@@ -94,13 +93,14 @@ jobs:
         with:
           java-version: '11'
           distribution: 'adopt'
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
       - name: Publish package
         run: gradle publish
         env:
-          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+          MAVEN_USERNAME: {% raw %}${{ secrets.OSSRH_USERNAME }}{% endraw %}
+          MAVEN_PASSWORD: {% raw %}${{ secrets.OSSRH_TOKEN }}{% endraw %}
 ```
-{% endraw %}
 
 {% data reusables.github-actions.gradle-workflow-steps %}
 1. Runs the `gradle publish` command to publish to the `OSSRH` Maven repository. The `MAVEN_USERNAME` environment variable will be set with the contents of your `OSSRH_USERNAME` secret, and the `MAVEN_PASSWORD` environment variable will be set with the contents of your `OSSRH_TOKEN` secret.
@@ -141,16 +141,18 @@ publishing {
 ```
 {% endraw %}
 
-With this configuration, you can create a workflow that publishes your package to the Maven Central Repository by running the `gradle publish` command.
+With this configuration, you can create a workflow that publishes your package to {% data variables.product.prodname_registry %} by running the `gradle publish` command.
 
 ```yaml{:copy}
+{% data reusables.actions.actions-not-certified-by-github-comment %}
+
 name: Publish package to GitHub Packages
 on:
   release:
     types: [created]
 jobs:
   publish:
-    runs-on: ubuntu-latest {% if currentVersion == "free-pro-team@latest" or currentVersion ver_gt "enterprise-server@3.1" or currentVersion == "github-ae@next" %}
+    runs-on: ubuntu-latest {% ifversion fpt or ghes > 3.1 or ghae-next %}
     permissions: 
       contents: read
       packages: write {% endif %}
@@ -160,6 +162,8 @@ jobs:
         with:
           java-version: '11'
           distribution: 'adopt'
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
       - name: Publish package
         run: gradle publish
         env:
@@ -167,7 +171,7 @@ jobs:
 ```
 
 {% data reusables.github-actions.gradle-workflow-steps %}
-1. Runs the `gradle publish` command to publish to {% data variables.product.prodname_registry %}. The `GITHUB_TOKEN` environment variable will be set with the content of the `GITHUB_TOKEN` secret. {% if currentVersion == "free-pro-team@latest" or currentVersion ver_gt "enterprise-server@3.1" or currentVersion == "github-ae@next" %}The `permissions` key specifies the access that the `GITHUB_TOKEN` secret will allow.{% endif %}
+1. Runs the `gradle publish` command to publish to {% data variables.product.prodname_registry %}. The `GITHUB_TOKEN` environment variable will be set with the content of the `GITHUB_TOKEN` secret. {% ifversion fpt or ghes > 3.1 or ghae-next %}The `permissions` key specifies the access that the `GITHUB_TOKEN` secret will allow.{% endif %}
 
    For more information about using secrets in your workflow, see "[Creating and using encrypted secrets](/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets)."
 
@@ -179,7 +183,7 @@ Ensure your _build.gradle_ file includes a repository for both your {% data vari
 
 For example, if you deploy to the Central Repository through the OSSRH hosting project, you might want to specify it in a distribution management repository with the `name` set to `OSSRH`. If you deploy to {% data variables.product.prodname_registry %}, you might want to specify it in a distribution management repository with the `name` set to `GitHubPackages`.
 
-If your organization is named "octocat" and your repository is named "hello-world", then the {% data variables.product.prodname_registry %} configuration in _build.gradle_ would look similar to the below example.
+If your organization is named "octocat" and your repository is named "hello-world", then the configuration in _build.gradle_ would look similar to the below example.
 
 {% raw %}
 ```groovy{:copy}
@@ -216,13 +220,15 @@ publishing {
 With this configuration, you can create a workflow that publishes your package to both the Maven Central Repository and {% data variables.product.prodname_registry %} by running the `gradle publish` command.
 
 ```yaml{:copy}
+{% data reusables.actions.actions-not-certified-by-github-comment %}
+
 name: Publish package to the Maven Central Repository and GitHub Packages
 on:
   release:
     types: [created]
 jobs:
   publish:
-    runs-on: ubuntu-latest {% if currentVersion == "free-pro-team@latest" or currentVersion ver_gt "enterprise-server@3.1" or currentVersion == "github-ae@next" %}
+    runs-on: ubuntu-latest {% ifversion fpt or ghes > 3.1 or ghae-next %}
     permissions: 
       contents: read
       packages: write {% endif %}
@@ -233,7 +239,9 @@ jobs:
         with:
           java-version: '11'
           distribution: 'adopt'
-      - name: Publish to the Maven Central Repository
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
+      - name: Publish package
         run: gradle publish
         env: {% raw %}
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
@@ -242,6 +250,6 @@ jobs:
 ```
 
 {% data reusables.github-actions.gradle-workflow-steps %}
-1. Runs the `gradle publish` command to publish to the `OSSRH` Maven repository and {% data variables.product.prodname_registry %}. The `MAVEN_USERNAME` environment variable will be set with the contents of your `OSSRH_USERNAME` secret, and the `MAVEN_PASSWORD` environment variable will be set with the contents of your `OSSRH_TOKEN` secret. The `GITHUB_TOKEN` environment variable will be set with the content of the `GITHUB_TOKEN` secret. {% if currentVersion == "free-pro-team@latest" or currentVersion ver_gt "enterprise-server@3.1" or currentVersion == "github-ae@next" %}The `permissions` key specifies the access that the `GITHUB_TOKEN` secret will allow.{% endif %}
+1. Runs the `gradle publish` command to publish to the `OSSRH` Maven repository and {% data variables.product.prodname_registry %}. The `MAVEN_USERNAME` environment variable will be set with the contents of your `OSSRH_USERNAME` secret, and the `MAVEN_PASSWORD` environment variable will be set with the contents of your `OSSRH_TOKEN` secret. The `GITHUB_TOKEN` environment variable will be set with the content of the `GITHUB_TOKEN` secret. {% ifversion fpt or ghes > 3.1 or ghae-next %}The `permissions` key specifies the access that the `GITHUB_TOKEN` secret will allow.{% endif %}
 
    For more information about using secrets in your workflow, see "[Creating and using encrypted secrets](/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets)."

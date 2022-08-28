@@ -9,9 +9,9 @@ redirect_from:
   - /actions/automating-your-workflow-with-github-actions/contexts-and-expression-syntax-for-github-actions
   - /actions/reference/contexts-and-expression-syntax-for-github-actions
 versions:
-  free-pro-team: '*'
-  enterprise-server: '>=2.22'
-  github-ae: '*'
+  fpt: '*'
+  ghes: '*'
+  ghae: '*'
 miniTocMaxHeadingLevel: 3
 ---
 
@@ -95,7 +95,7 @@ The `github` context contains information about the workflow run and the event t
 |---------------|------|-------------|
 | `github` | `object` | The top-level context available during any job or step in a workflow. |
 | `github.action` | `string` | The name of the action currently running. {% data variables.product.prodname_dotcom %} removes special characters or uses the name `run` when the current step runs a script.  If you use the same action more than once in the same job, the name will include a suffix with the sequence number.  For example, the first script you run will have the name `run1`, and the second script will be named `run2`. Similarly, the second invocation of `actions/checkout` will be `actionscheckout2`. |
-| `github.action_path` | `string` | The path where your action is located. You can use this path to easily access files located in the same repository as your action. This attribute is only supported in composite run steps actions. |
+| `github.action_path` | `string` | The path where your action is located. You can use this path to easily access files located in the same repository as your action. This attribute is only supported in composite actions. |
 | `github.actor` | `string` | The login of the user that initiated the workflow run. |
 | `github.base_ref` | `string` | The `base_ref` or target branch of the pull request in a workflow run. This property is only available when the event that triggers a workflow run is either `pull_request` or `pull_request_target`. |
 | `github.event` | `object` | The full event webhook payload. For more information, see "[Events that trigger workflows](/articles/events-that-trigger-workflows/)." You can access individual properties of the event using this context. |
@@ -103,7 +103,7 @@ The `github` context contains information about the workflow run and the event t
 | `github.event_path` | `string` | The path to the full event webhook payload on the runner. |
 | `github.head_ref` | `string` | The `head_ref` or source branch of the pull request in a workflow run. This property is only available when the event that triggers a workflow run is either `pull_request` or `pull_request_target`. |
 | `github.job` | `string` | The [`job_id`](/actions/reference/workflow-syntax-for-github-actions#jobsjob_id) of the current job. |
-| `github.ref` | `string` | The branch or tag ref that triggered the workflow run. For branches this in the format  `refs/heads/<branch_name>`, and for tags it is `refs/tags/<tag_name>`. |
+| `github.ref` | `string` | The branch or tag ref that triggered the workflow run. For branches this is the format  `refs/heads/<branch_name>`, and for tags it is `refs/tags/<tag_name>`. |
 | `github.repository` | `string` | The owner and repository name. For example, `Codertocat/Hello-World`. |
 | `github.repository_owner` | `string` | The repository owner's name. For example, `Codertocat`. |
 | `github.run_id` | `string` | {% data reusables.github-actions.run_id_description %} |
@@ -162,7 +162,7 @@ The `runner` context contains information about the runner that is executing the
 |---------------|------|-------------|
 | `runner.os` | `string` | {% data reusables.actions.runner-os-description %} |
 | `runner.temp` | `string` | {% data reusables.actions.runner-temp-directory-description %} |
-| `runner.tool_cache` | `string` | {% if currentVersion == "github-ae@latest" %}For instructions on how to make sure your {% data variables.actions.hosted_runner %} has the required software installed, see "[Creating custom images](/actions/using-github-hosted-runners/creating-custom-images)." {% else %} {% data reusables.actions.runner-tool-cache-description %} {% endif %}|
+| `runner.tool_cache` | `string` | {% ifversion ghae %}For instructions on how to make sure your {% data variables.actions.hosted_runner %} has the required software installed, see "[Creating custom images](/actions/using-github-hosted-runners/creating-custom-images)." {% else %} {% data reusables.actions.runner-tool-cache-description %} {% endif %}|
 
 ### `needs` context
 
@@ -219,14 +219,14 @@ jobs:
 
 ## Literals
 
-As part of an expression, you can use `boolean`, `null`, `number`, or `string` data types. Boolean literals are not case sensitive, so you can use `true` or `True`.
+As part of an expression, you can use `boolean`, `null`, `number`, or `string` data types.
 
 | Data type | Literal value |
 |-----------|---------------|
 | `boolean` | `true` or `false` |
 | `null`    | `null` |
-| `number`  | Any number format supported by JSON.
-| `string`  | You must use single quotes. Escape literal single-quotes with a single quote.
+| `number`  | Any number format supported by JSON. |
+| `string`  | You must use single quotes. Escape literal single-quotes with a single quote. |
 
 #### Example
 
@@ -439,7 +439,7 @@ Creates a hash for any `package-lock.json` and `Gemfile.lock` files in the repos
 
 ## Job status check functions
 
-You can use the following status check functions as expressions in `if` conditionals. If your `if` expression does not contain any of the status functions it will automatically result with `success()`. For more information about `if` conditionals, see "[Workflow syntax for GitHub Actions](/articles/workflow-syntax-for-github-actions/#jobsjob_idif)."
+You can use the following status check functions as expressions in `if` conditionals. A default status check of `success()` is applied unless you include one of these functions. For more information about `if` conditionals, see "[Workflow syntax for GitHub Actions](/articles/workflow-syntax-for-github-actions/#jobsjob_idif)."
 
 ### success
 
@@ -456,7 +456,7 @@ steps:
 
 ### always
 
-Always returns `true`, even when canceled. A job or step will not run when a critical failure prevents the task from running. For example, if getting sources failed.
+Causes the step to always execute, and returns `true`, even when canceled. A job or step will not run when a critical failure prevents the task from running. For example, if getting sources failed.
 
 #### Example
 
@@ -502,3 +502,42 @@ For example, consider an array of objects named `fruits`.
 ```
 
 The filter `fruits.*.name` returns the array `[ "apple", "orange", "pear" ]`
+
+## Context availability
+
+Different contexts are available throughout a workflow run. For example, the `secrets` context may only be used at certain places within a job.
+
+In addition, some functions may only be used in certain places. For example, the `hashFiles` function is not available everywhere.
+
+The following table indicates where each context and special function can be used within a workflow. Unless listed below, a function can be used anywhere.
+
+| Path | Context | Special functions |
+| ---- | ------- | ----------------- |
+| <code>concurrency</code> | <code>github</code> | |
+| <code>env</code> | <code>github, secrets</code> | |
+| <code>jobs.&lt;job_id&gt;.concurrency</code> | <code>github, needs, strategy, matrix</code> | |
+| <code>jobs.&lt;job_id&gt;.container</code> | <code>github, needs, strategy, matrix</code> | |
+| <code>jobs.&lt;job_id&gt;.container.credentials</code> | <code>github, needs, strategy, matrix, env, secrets</code> | |
+| <code>jobs.&lt;job_id&gt;.container.env.&lt;env_id&gt;</code> | <code>github, needs, strategy, matrix, job, runner, env, secrets</code> | |
+| <code>jobs.&lt;job_id&gt;.continue-on-error</code> | <code>github, needs, strategy, matrix</code> | |
+| <code>jobs.&lt;job_id&gt;.defaults.run</code> | <code>github, needs, strategy, matrix, env</code> | |
+| <code>jobs.&lt;job_id&gt;.env</code> | <code>github, needs, strategy, matrix, secrets</code> | |
+| <code>jobs.&lt;job_id&gt;.environment</code> | <code>github, needs, strategy, matrix</code> | |
+| <code>jobs.&lt;job_id&gt;.environment.url</code> | <code>github, needs, strategy, matrix, job, runner, env, steps</code> | |
+| <code>jobs.&lt;job_id&gt;.if</code> | <code>github, needs</code> | <code>always, cancelled, success, failure</code> |
+| <code>jobs.&lt;job_id&gt;.name</code> | <code>github, needs, strategy, matrix</code> | |
+| <code>jobs.&lt;job_id&gt;.outputs.&lt;output_id&gt;</code> | <code>github, needs, strategy, matrix, job, runner, env, secrets, steps</code> | |
+| <code>jobs.&lt;job_id&gt;.runs-on</code> | <code>github, needs, strategy, matrix</code> | |
+| <code>jobs.&lt;job_id&gt;.services</code> | <code>github, needs, strategy, matrix</code> | |
+| <code>jobs.&lt;job_id&gt;.services.&lt;service_id&gt;.credentials</code> | <code>github, needs, strategy, matrix, env, secrets</code> | |
+| <code>jobs.&lt;job_id&gt;.services.&lt;service_id&gt;.env.&lt;env_id&gt;</code> | <code>github, needs, strategy, matrix, job, runner, env, secrets</code> | |
+| <code>jobs.&lt;job_id&gt;.steps.continue-on-error</code> | <code>github, needs, strategy, matrix, job, runner, env, secrets, steps</code> | <code>hashFiles</code> |
+| <code>jobs.&lt;job_id&gt;.steps.env</code> | <code>github, needs, strategy, matrix, job, runner, env, secrets, steps</code> | <code>hashFiles</code> |
+| <code>jobs.&lt;job_id&gt;.steps.if</code> | <code>github, needs, strategy, matrix, job, runner, env, steps</code> | <code>always, cancelled, success, failure, hashFiles</code> |
+| <code>jobs.&lt;job_id&gt;.steps.name</code> | <code>github, needs, strategy, matrix, job, runner, env, secrets, steps</code> | <code>hashFiles</code> |
+| <code>jobs.&lt;job_id&gt;.steps.run</code> | <code>github, needs, strategy, matrix, job, runner, env, secrets, steps</code> | <code>hashFiles</code> |
+| <code>jobs.&lt;job_id&gt;.steps.timeout-minutes</code> | <code>github, needs, strategy, matrix, job, runner, env, secrets, steps</code> | <code>hashFiles</code> |
+| <code>jobs.&lt;job_id&gt;.steps.with</code> | <code>github, needs, strategy, matrix, job, runner, env, secrets, steps</code> | <code>hashFiles</code> |
+| <code>jobs.&lt;job_id&gt;.steps.working-directory</code> | <code>github, needs, strategy, matrix, job, runner, env, secrets, steps</code> | <code>hashFiles</code> |
+| <code>jobs.&lt;job_id&gt;.strategy</code> | <code>github, needs</code> | |
+| <code>jobs.&lt;job_id&gt;.timeout-minutes</code> | <code>github, needs, strategy, matrix</code> | |

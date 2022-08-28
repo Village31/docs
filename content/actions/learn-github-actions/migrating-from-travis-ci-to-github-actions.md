@@ -4,15 +4,16 @@ intro: '{% data variables.product.prodname_actions %} and Travis CI share multip
 redirect_from:
   - /actions/migrating-to-github-actions/migrating-from-travis-ci-to-github-actions
 versions:
-  free-pro-team: '*'
-  enterprise-server: '>=2.22'
-  github-ae: '*'
+  fpt: '*'
+  ghes: '*'
+  ghae: '*'
 type: tutorial
 topics:
   - Travis CI
   - Migration
   - CI
   - CD
+shortTitle: Migrate from Travis CI
 ---
 
 {% data reusables.actions.enterprise-beta %}
@@ -187,7 +188,7 @@ When migrating from Travis CI, consider the following key features in {% data va
 
 ### Storing secrets
 
-{% data variables.product.prodname_actions %} allows you to store secrets and reference them in your jobs. {% data variables.product.prodname_actions %} organizations can limit which repositories can access organization secrets. {% if currentVersion == "free-pro-team@latest" or currentVersion ver_gt "enterprise-server@3.0" or currentVersion == "github-ae@latest" %}Environment protection rules can require manual approval for a workflow to access environment secrets. {% endif %}For more information, see "[Encrypted secrets](/actions/reference/encrypted-secrets)."
+{% data variables.product.prodname_actions %} allows you to store secrets and reference them in your jobs. {% data variables.product.prodname_actions %} organizations can limit which repositories can access organization secrets. {% ifversion fpt or ghes > 3.0 or ghae %}Environment protection rules can require manual approval for a workflow to access environment secrets. {% endif %}For more information, see "[Encrypted secrets](/actions/reference/encrypted-secrets)."
 
 ### Sharing files between jobs and workflows
 
@@ -204,9 +205,8 @@ The concurrent jobs and workflow execution times in {% data variables.product.pr
 ### Using different languages in {% data variables.product.prodname_actions %}
 
 When working with different languages in {% data variables.product.prodname_actions %}, you can create a step in your job to set up your language dependencies. For more information about working with a particular language, see the specific guide:
-  - [Building and testing Node.js](/actions/guides/building-and-testing-nodejs)
+  - [Building and testing Node.js or Python](/actions/guides/building-and-testing-nodejs-or-python)
   - [Building and testing PowerShell](/actions/guides/building-and-testing-powershell)
-  - [Building and testing Python](/actions/guides/building-and-testing-python)
   - [Building and testing Java with Maven](/actions/guides/building-and-testing-java-with-maven)
   - [Building and testing Java with Gradle](/actions/guides/building-and-testing-java-with-gradle)
   - [Building and testing Java with Ant](/actions/guides/building-and-testing-java-with-ant)
@@ -409,7 +409,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
           node-version: '12.x'
       - run: npm install

@@ -1,17 +1,20 @@
 ---
 title: Building and testing Python
 intro: You can create a continuous integration (CI) workflow to build and test your Python project.
+product: '{% data reusables.gated-features.actions %}'
 redirect_from:
   - /actions/automating-your-workflow-with-github-actions/using-python-with-github-actions
   - /actions/language-and-framework-guides/using-python-with-github-actions
 versions:
-  free-pro-team: '*'
-  enterprise-server: '>=2.22'
-  github-ae: '*'
+  fpt: '*'
+  ghes: '*'
+  ghae: '*'
 type: tutorial
+hidden: true
 topics:
   - CI
   - Python
+shortTitle: Build & test Python
 ---
 
 {% data reusables.actions.enterprise-beta %}
@@ -22,7 +25,7 @@ topics:
 
 This guide shows you how to build, test, and publish a Python package.
 
-{% if currentVersion == "github-ae@latest" %} For instructions on how to make sure your {% data variables.actions.hosted_runner %} has the required software installed, see "[Creating custom images](/actions/using-github-hosted-runners/creating-custom-images)."
+{% ifversion ghae %} For instructions on how to make sure your {% data variables.actions.hosted_runner %} has the required software installed, see "[Creating custom images](/actions/using-github-hosted-runners/creating-custom-images)."
 {% else %} {% data variables.product.prodname_dotcom %}-hosted runners have a tools cache with pre-installed software, which includes Python and PyPy. You don't have to install anything! For a full list of up-to-date software and the pre-installed versions of Python and PyPy, see "[Specifications for {% data variables.product.prodname_dotcom %}-hosted runners](/actions/reference/specifications-for-github-hosted-runners/#supported-software)".
 {% endif %}
 
@@ -55,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8, 3.9]
 
     steps:
       - uses: actions/checkout@v2
@@ -114,7 +117,7 @@ jobs:
       # You can use PyPy versions in python-version.
       # For example, pypy2 and pypy3
       matrix:
-        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+        python-version: [2.7, 3.6, 3.7, 3.8, 3.9]
 
     steps:
       - uses: actions/checkout@v2
@@ -177,7 +180,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [2.7, 3.6, 3.7, 3.8, pypy2, pypy3]
+        python-version: [3.6, 3.7, 3.8, 3.9, pypy2, pypy3]
         exclude:
           - os: macos-latest
             python-version: 3.6
@@ -217,7 +220,7 @@ steps:
 
 ### Requirements file
 
-After you update `pip`, a typical next step is to install dependencies from *requirements.txt*.
+After you update `pip`, a typical next step is to install dependencies from *requirements.txt*. For more information, see [pip](https://pip.pypa.io/en/stable/cli/pip_install/#example-requirements-file).
 
 {% raw %}
 ```yaml{:copy}
@@ -317,8 +320,11 @@ steps:
   run: |
     pip install flake8
     flake8 .
+  continue-on-error: true
 ```
 {% endraw %}
+
+The linting step has `continue-on-error: true` set. This will keep the workflow from failing if the linting step doesn't succeed. Once you've addressed all of the linting errors, you can remove this option so the workflow will catch new issues.
 
 ### Running tests with tox
 
@@ -336,7 +342,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: [2.7, 3.7, 3.8]
+        python: [3.7, 3.8, 3.9]
 
     steps:
       - uses: actions/checkout@v2
@@ -344,9 +350,9 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
-      - name: Install Tox and any other packages
+      - name: Install tox and any other packages
         run: pip install tox
-      - name: Run Tox
+      - name: Run tox
         # Run tox using the version of Python in `PATH`
         run: tox -e py
 ```
@@ -370,7 +376,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8, 3.9]
 
     steps:
       - uses: actions/checkout@v2
@@ -401,12 +407,8 @@ You can configure your workflow to publish your Python package to a package regi
 
 For this example, you will need to create two [PyPI API tokens](https://pypi.org/help/#apitoken). You can use secrets to store the access tokens or credentials needed to publish your package. For more information, see "[Creating and using encrypted secrets](/github/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets)."
 
-{% raw %}
 ```yaml{:copy}
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
+{% data reusables.actions.actions-not-certified-by-github-comment %}
 
 name: Upload Python Package
 
@@ -433,8 +435,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
         with:
           user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          password: {% raw %}${{ secrets.PYPI_API_TOKEN }}{% endraw %}
 ```
-{% endraw %}
 
 For more information about the template workflow, see [`python-publish`](https://github.com/actions/starter-workflows/blob/main/ci/python-publish.yml).
